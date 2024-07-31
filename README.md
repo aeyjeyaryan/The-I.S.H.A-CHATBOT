@@ -1,6 +1,7 @@
 # ISHA (Intelligent System for Hyper Accelerated Learning)
 
-ISHA is an advanced AI-based system designed to provide detailed answers to questions based on the content of predefined PDF files. It uses Google Generative AI embeddings and FAISS for efficient text search and retrieval.
+ISHA is a RAG based AI system designed to provide detailed answers to questions based on the content of predefined PDF files. It uses Google Generative AI embeddings and FAISS for efficient text search and retrieval.
+
 
 ## Features
 

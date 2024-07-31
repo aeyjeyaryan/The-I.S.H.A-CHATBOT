@@ -14,3 +14,9 @@ ISHA is an advanced AI-based system designed to provide detailed answers to ques
 
 - Python 3.7 or higher
 - Google Generative AI API key
+
+
+## How it looks: 
+
+![readmse ss](https://github.com/user-attachments/assets/ceba868d-c7ba-48c8-91f9-a6f35b2562b7)
+

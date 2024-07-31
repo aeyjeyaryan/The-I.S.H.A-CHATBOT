@@ -1,5 +1,4 @@
-from PyPDF2 import PdfReader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from flask import Flask, request, jsonify
 import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import google.generativeai as genai
@@ -13,26 +12,7 @@ load_dotenv()
 os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Define the list of predefined PDF file paths
-predefined_pdfs = ["loops.pdf", "strings.pdf", "tuple_dict_set.pdf"]
-
-def get_pdf_text(pdf_files):
-    text = ""
-    for pdf_file in pdf_files:
-        pdf_reader = PdfReader(pdf_file)
-        for page in pdf_reader.pages:
-            text += page.extract_text()
-    return text
-
-def get_text_chunks(text):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
-    chunks = text_splitter.split_text(text)
-    return chunks
-
-def get_vector_store(text_chunks):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
-    vector_store.save_local("faiss_index")
+app = Flask(__name__)
 
 def get_conversational_chain():
     prompt_template = """
@@ -50,9 +30,15 @@ def get_conversational_chain():
 
     return chain
 
-def user_input(user_question):
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.json
+    user_question = data.get('question')
 
+    if not user_question:
+        return jsonify({"error": "No question provided"}), 400
+
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
     docs = new_db.similarity_search(user_question)
 
@@ -63,29 +49,7 @@ def user_input(user_question):
         return_only_outputs=True
     )
 
-    print("Reply: ", response["output_text"])
-
-def main():
-    print("Intelligent System for Hyper Accelerated Learning")
-
-    with open("predefined_pdfs_processed.txt", "r") as f:
-        processed = f.read()
-
-    if not processed:
-        print("Processing PDF files...")
-        raw_text = get_pdf_text(predefined_pdfs)
-        text_chunks = get_text_chunks(raw_text)
-        get_vector_store(text_chunks)
-        with open("predefined_pdfs_processed.txt", "w") as f:
-            f.write("processed")
-        print("PDF files processed successfully.")
-    else:
-        print("PDF files already processed.")
-
-    user_question = input("Your Question Here: ")
-
-    if user_question:
-        user_input(user_question)
+    return jsonify({"answer": response["output_text"]})
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, host='0.0.0.0', port=5000)
